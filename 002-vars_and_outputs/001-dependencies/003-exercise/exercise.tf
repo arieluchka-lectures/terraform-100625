@@ -26,6 +26,7 @@ resource "aws_vpc" "main" {
   }
 }
 
+# regular internet gateway
 resource "aws_internet_gateway" "main" {
   vpc_id = XXX
   
@@ -71,6 +72,7 @@ resource "aws_eip" "nat" {
   }
 }
 
+# NAT internet gateway
 resource "aws_nat_gateway" "main" {
   allocation_id = XXX
   subnet_id     = XXX
@@ -187,7 +189,7 @@ resource "aws_security_group" "app_server" {
 resource "aws_instance" "bastion" {
   ami           = "ami-0532be01f26a3de55"
   instance_type = "t3.micro"
-  subnet_id     = XXX
+  subnet_id     = XXX # (public subnet)
   
   vpc_security_group_ids = [XXX]
   
@@ -204,7 +206,7 @@ resource "aws_instance" "bastion" {
 resource "aws_instance" "app_server" {
   ami           = "ami-0532be01f26a3de55"
   instance_type = "t3.micro"
-  subnet_id     = XXX  
+  subnet_id     = XXX  # (private subnet)
   
   vpc_security_group_ids = [XXX]  
   

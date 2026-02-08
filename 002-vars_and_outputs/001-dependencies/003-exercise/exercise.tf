@@ -95,7 +95,7 @@ resource "aws_route_table" "public" {
 resource "aws_route" "public_internet_access" {
   route_table_id         = XXX
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = XXX
+  gateway_id             = XXX # (internet gateway (from part 1))
 }
 
 resource "aws_route_table" "private" {
@@ -109,7 +109,7 @@ resource "aws_route_table" "private" {
 resource "aws_route" "private_nat_access" {
   route_table_id         = XXX
   destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = XXX
+  nat_gateway_id         = XXX # (nat gateway (from part 3))
 }
 
 # ============================================

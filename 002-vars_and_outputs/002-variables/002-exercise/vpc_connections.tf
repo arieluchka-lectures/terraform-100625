@@ -38,7 +38,7 @@ resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "private-route-table"
+    Name = "ariels-private-route-table"
   }
 }
 
@@ -70,7 +70,7 @@ resource "aws_network_acl" "main" {
   }
 
   tags = {
-    Name = "main-nacl"
+    Name = "ariels-main-nacl"
   }
 }
 
@@ -88,7 +88,7 @@ resource "aws_security_group" "ec2_sg" {
   }
 
   tags = {
-    Name = "ec2-ssm-sg"
+    Name = "ariels-ec2-ssm-sg"
   }
 }
 
@@ -114,7 +114,7 @@ resource "aws_security_group" "endpoint_sg" {
 }
 
 resource "aws_iam_role" "ec2_ssm_role" {
-  name = "EC2-SSM-Role"
+  name = "ariels-EC2-SSM-Role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -130,7 +130,7 @@ resource "aws_iam_role" "ec2_ssm_role" {
   })
 
   tags = {
-    Name = "EC2-SSM-Role"
+    Name = "ariels-EC2-SSM-Role"
   }
 }
 
@@ -179,7 +179,7 @@ resource "aws_instance" "main" {
   }
 
   tags = {
-    Name = "SSM-Enabled-EC2"
+    Name = "ariels-SSM-Enabled-EC2"
   }
 }
 

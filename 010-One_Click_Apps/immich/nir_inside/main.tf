@@ -21,7 +21,7 @@ provider "aws" {
 
 
 resource "aws_vpc" "main" {
-  cidr_block           = "10.0.10.0/16"
+  cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
   enable_dns_support   = true
   
@@ -169,7 +169,8 @@ resource "tls_private_key" "ssh_key" {
   rsa_bits  = 4096
 }
 variable "private_key_path" {
-"C:\Users\LENOVO\.ssh"
+  type    = string
+  default = "C:\\Users\\LENOVO\\.ssh"
 }
 
 resource "local_file" "private_key" {
@@ -214,10 +215,12 @@ resource "aws_instance" "app_server" {
     aws_instance.bastion
   ]
 
-user_data = << - EOT
+user_data =<<-EOT
 #!/bin/bash
 
 docker run -d -p 8080:8080 stirlingtools/stirling-pdf:latest-ultra-lite
+
+EOT 
 
   tags = {
     Name = "app-server"
@@ -242,12 +245,11 @@ output "combined_message" {
   value = <<-BANANA
 Connect to the bastion with:
   
-  ssh -A -i ${C:\Users\LENOVO\.ssh.private_key_path} ec2-user@${aws_instance.bastion.public_ip}
+  ssh -A -i "${var.private_key_path}" ec2-user@${aws_instance.bastion.public_ip}
 
-from bation, connect to app-server with: 
+From bastion, connect to app-server with: 
 
   ssh -A ec2-user@${aws_instance.app_server.private_ip}
-  
 BANANA
 }
 

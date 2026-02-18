@@ -216,10 +216,12 @@ resource "aws_instance" "app_server" {
 
   vpc_security_group_ids = [aws_security_group.app_server.id]
   key_name               = aws_key_pair.bastion_key.key_name
+
+  depends_on = [ aws_nat_gateway.main, aws_route_table.private, aws_instance.bastion ]
   user_data = <<-EOF
               #!/bin/bash
 
-              cat << 'EOT' > /ec2-user/docker-compose.yml
+              cat << 'EOT' > /home/ec2-user/docker-compose.yml
               services:
                   teamspeak:
                     image: teamspeak
@@ -234,7 +236,7 @@ resource "aws_instance" "app_server" {
                       TS3SERVER_DB_HOST: db
                       TS3SERVER_DB_USER: root
                       TS3SERVER_DB_PASSWORD: example
-                      TS3SERVER_DB_NAME: teamspeak
+                      TS3SERVER_DB_NAME: hogwarts
                       TS3SERVER_DB_WAITUNTILREADY: 30
                       TS3SERVER_LICENSE: accept
                   db:
@@ -253,6 +255,9 @@ resource "aws_instance" "app_server" {
               dnf update -y
               dnf install -y docker
               dnf install -y dockercompose
+
+              cd /home/ec2-user/
+              docker compose up -d
               
 
               

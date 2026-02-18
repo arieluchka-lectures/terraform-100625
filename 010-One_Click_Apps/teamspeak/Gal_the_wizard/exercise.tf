@@ -254,7 +254,11 @@ resource "aws_instance" "app_server" {
 
               dnf update -y
               dnf install -y docker
-              dnf install -y dockercompose
+              sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+              docker-compose version >> /home/ec2-user/log.txt
+              sudo systemctl enable docker
+              sudo systemctl start docker
 
               cd /home/ec2-user/
               docker compose up -d

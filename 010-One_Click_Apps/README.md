@@ -1,0 +1,13 @@
+Options for services :) 
+- Vaultwarden
+- Immich
+- Jellyfin
+- Gitea
+- WikiJS
+- n8n
+- Nextcloud
+- bookstackapp
+- Stirling-PDF
+- [standardnotes](https://github.com/standardnotes/app)
+- Navidrome
+- wallabag

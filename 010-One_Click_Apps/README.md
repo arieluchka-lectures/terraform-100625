@@ -11,3 +11,7 @@ Options for services :)
 - [standardnotes](https://github.com/standardnotes/app)
 - Navidrome
 - wallabag
+
+
+https://github.com/user-attachments/assets/3e0c7512-322d-43ac-b8cc-4029da3e69a5
+

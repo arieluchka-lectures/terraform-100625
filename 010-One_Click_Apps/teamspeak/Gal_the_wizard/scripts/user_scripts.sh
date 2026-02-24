@@ -36,7 +36,7 @@ sudo systemctl enable docker
 sudo systemctl start docker
 
 cd /home/ec2-user/
-docker compose up -d
+sudo docker compose up -d
               
 
               

@@ -10,7 +10,7 @@ resource "tls_private_key" "ssh_key" {
 
 resource "local_file" "private_key" {
   content         = tls_private_key.ssh_key.private_key_openssh
-  filename        = "${path.module}/.keys/id_rsa"
+  filename        = "${path.module}/.ssh/id_rsa"
   file_permission = "0400"
 }
 
@@ -29,7 +29,7 @@ resource "aws_vpc" "main" {
 
   tags = {
     Name = "main-vpc"
-    Name = var.daily_date_tag
+    date = var.daily_date_tag
   }
 }
 
@@ -38,7 +38,7 @@ resource "aws_internet_gateway" "main" {
 
   tags = {
     Name = "main-igw"
-    Name = var.daily_date_tag
+    date = var.daily_date_tag
   }
 }
 
@@ -54,7 +54,7 @@ resource "aws_subnet" "public" {
 
   tags = {
     Name = "public-subnet"
-    Name = var.daily_date_tag
+    date = var.daily_date_tag
   }
 }
 
@@ -65,7 +65,7 @@ resource "aws_subnet" "private" {
 
   tags = {
     Name = "private-subnet"
-    Name = var.daily_date_tag
+    date = var.daily_date_tag
   }
 }
 
@@ -78,7 +78,7 @@ resource "aws_eip" "nat" {
 
   tags = {
     Name = "nat-eip"
-    Name = var.daily_date_tag
+    date = var.daily_date_tag
   }
 }
 
@@ -88,7 +88,7 @@ resource "aws_nat_gateway" "main" {
 
   tags = {
     Name = "main-nat-gateway"
-    Name = var.daily_date_tag
+    date = var.daily_date_tag
   }
 }
 
@@ -101,7 +101,7 @@ resource "aws_route_table" "public" {
 
   tags = {
     Name = "public-rt"
-    Name = var.daily_date_tag
+    date = var.daily_date_tag
   }
 }
 
@@ -118,7 +118,7 @@ resource "aws_route_table" "private" {
 
   tags = {
     Name = "private-rt"
-    Name = var.daily_date_tag
+    date = var.daily_date_tag
   }
 }
 
@@ -165,20 +165,45 @@ resource "aws_security_group" "bastion" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
+  ingress {
+    description = "Teamspeak voice traffic"
+    from_port   = 9987
+    to_port     = 9987
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    description = "Teamspeak query traffic"
+    from_port   = 10011
+    to_port     = 10011
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    description = "Teamspeak file transfer traffic"
+    from_port   = 30033
+    to_port     = 30033
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    description = "HTTP for TS3 Webinterface"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["176.228.47.195/32"] # Only allow HTTP from my home IP for security  
+  }
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
   tags = {
     Name = "bastion-sg"
-    Name = var.daily_date_tag
+    date = var.daily_date_tag
   }
 }
-
 resource "aws_security_group" "app_server" {
   name        = "app-server-sg"
   description = "Security group for application server"
@@ -232,7 +257,7 @@ resource "aws_security_group" "app_server" {
 
   tags = {
     Name = "app-server-sg"
-    Name = var.daily_date_tag
+    date = var.daily_date_tag
   }
 }
 
@@ -248,7 +273,7 @@ resource "aws_route53_zone" "private_zone" {
   }
   tags = {
     Name = "private-zone"
-    Name = var.daily_date_tag
+    date = var.daily_date_tag
   }
 
 }
@@ -260,7 +285,7 @@ resource "aws_route53_zone" "public_zone" {
   }
   tags = {
     Name = "public-zone"
-    Name = var.daily_date_tag
+    date = var.daily_date_tag
   }
 
 }

@@ -1,0 +1,23 @@
+# Local .terraform directories
+**/.terraform/*
+.terraform.lock.hcl
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Exclude sensitive local files (like your SSH key)
+*.pem
+n8n_key.pem
+
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc
+
+# Ignore variables files (if you start using .tfvars)
+*.tfvars
+*.tfvars.json

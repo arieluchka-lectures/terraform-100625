@@ -7,7 +7,12 @@ ssh-add +{link to key}
 ssh -A -i {link to key} ec2-user@{ec2-eip}
 
 n8n commands to download image and run container:
--v n8n_data:/home/node/.n8n \
+docker volume create n8n_data
 
 docker run -it --rm --name n8n -p 5678:5678 -v n8n_data:/home/node/.n8n docker.n8n.io/n8nio/n8n
 (both lines together in 1 cmd)
+
+in EC2 - install docker:
+(in user_data/script.sh)  #!/bin/bash
+sudo update yum -y
+sudo yum install docker -y

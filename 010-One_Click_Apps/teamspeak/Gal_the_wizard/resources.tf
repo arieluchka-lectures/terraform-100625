@@ -23,12 +23,13 @@ resource "aws_key_pair" "bastion_key" {
 # ============================================
 
 resource "aws_vpc" "main" {
-  cidr_block           = "10.0.0.0/16"
+  cidr_block           = var.vpc_cidr_block
   enable_dns_hostnames = true
   enable_dns_support   = true
 
   tags = {
     Name = "main-vpc"
+     Name = var.daily_date_tag
   }
 }
 
@@ -37,6 +38,7 @@ resource "aws_internet_gateway" "main" {
 
   tags = {
     Name = "main-igw"
+    Name = var.daily_date_tag
   }
 }
 
@@ -52,6 +54,7 @@ resource "aws_subnet" "public" {
 
   tags = {
     Name = "public-subnet"
+    Name = var.daily_date_tag
   }
 }
 
@@ -62,6 +65,7 @@ resource "aws_subnet" "private" {
 
   tags = {
     Name = "private-subnet"
+     Name = var.daily_date_tag
   }
 }
 
@@ -74,6 +78,7 @@ resource "aws_eip" "nat" {
 
   tags = {
     Name = "nat-eip"
+     Name = var.daily_date_tag
   }
 }
 
@@ -83,6 +88,7 @@ resource "aws_nat_gateway" "main" {
 
   tags = {
     Name = "main-nat-gateway"
+     Name = var.daily_date_tag
   }
 }
 
@@ -95,6 +101,7 @@ resource "aws_route_table" "public" {
 
   tags = {
     Name = "public-rt"
+     Name = var.daily_date_tag
   }
 }
 
@@ -102,6 +109,11 @@ resource "aws_route" "public_internet_access" {
   route_table_id         = aws_route_table.public.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.main.id
+
+  tags = {
+    Name = "public-internet-access"
+     Name = var.daily_date_tag
+  }
 }
 
 resource "aws_route_table" "private" {
@@ -109,6 +121,7 @@ resource "aws_route_table" "private" {
 
   tags = {
     Name = "private-rt"
+     Name = var.daily_date_tag
   }
 }
 
@@ -116,6 +129,11 @@ resource "aws_route" "private_nat_access" {
   route_table_id         = aws_route_table.private.id
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.main.id
+
+  tags = {
+    Name = "private-nat-access"
+     Name = var.daily_date_tag
+  }
 }
 
 # ============================================
@@ -125,11 +143,21 @@ resource "aws_route" "private_nat_access" {
 resource "aws_route_table_association" "public" {
   subnet_id      = aws_subnet.public.id
   route_table_id = aws_route_table.public.id
+
+  tags = {
+    Name = "public-rt-association"
+     Name = var.daily_date_tag
+  }
 }
 
 resource "aws_route_table_association" "private" {
   subnet_id      = aws_subnet.private.id
   route_table_id = aws_route_table.private.id
+
+  tags = {
+    Name = "private-rt-association"
+     Name = var.daily_date_tag
+  }
 }
 
 # ============================================
@@ -158,6 +186,7 @@ resource "aws_security_group" "bastion" {
 
   tags = {
     Name = "bastion-sg"
+    Name = var.daily_date_tag
   }
 }
 
@@ -183,15 +212,7 @@ resource "aws_security_group" "app_server" {
 
   tags = {
     Name = "app-server-sg"
+    Name = var.daily_date_tag
   }
 }
 
-locals {
-  start_sh = templatefile("${path.module}/scripts/user_scripts.sh",
-    {
-      MYSQL_DATABASE        = "Hogwarts"
-      MYSQL_ROOT_PASSWORD   = "hipo"
-      TS3SERVER_DB_PASSWORD = "hipo"
-      TS3SERVER_DB_NAME     = "Hogwarts"
-  })
-}

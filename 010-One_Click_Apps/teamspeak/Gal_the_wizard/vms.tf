@@ -13,6 +13,7 @@ resource "aws_instance" "bastion" {
 
   tags = {
     Name = "bastion-host"
+    Name = var.daily_date_tag
   }
 }
 
@@ -30,8 +31,9 @@ resource "aws_instance" "app_server" {
   key_name               = aws_key_pair.bastion_key.key_name
 
   depends_on = [aws_nat_gateway.main, aws_route_table.private, aws_instance.bastion]
-  user_data = local.start_sh
+  user_data  = local.start_sh
   tags = {
     Name = "app-server"
+    Name = var.daily_date_tag
   }
 }

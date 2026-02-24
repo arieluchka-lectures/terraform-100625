@@ -10,7 +10,7 @@ resource "tls_private_key" "ssh_key" {
 
 resource "local_file" "private_key" {
   content         = tls_private_key.ssh_key.private_key_openssh
-  filename        = "${path.module}/id_rsa"
+  filename        = "${path.module}/.keys/id_rsa"
   file_permission = "0400"
 }
 
@@ -198,7 +198,7 @@ resource "aws_security_group" "app_server" {
     to_port         = 9987
     protocol        = "udp"
     security_groups = [aws_security_group.bastion.id]
-    }
+  }
 
   ingress {
     description     = "Teamspeak query traffic"
@@ -241,8 +241,11 @@ resource "aws_security_group" "app_server" {
 # ============================================
 
 resource "aws_route53_zone" "private_zone" {
-  name = "teamspeak.example.com"
+  name = "private.wizardnet.100625.lol"
+  lifecycle {
+    ignore_changes = [vpc]
 
+  }
   tags = {
     Name = "private-zone"
     Name = var.daily_date_tag
@@ -250,8 +253,11 @@ resource "aws_route53_zone" "private_zone" {
 
 }
 resource "aws_route53_zone" "public_zone" {
-  name = "example.com"
+  name = "wizardnet.100625.lol"
+  lifecycle {
+    ignore_changes = [vpc]
 
+  }
   tags = {
     Name = "public-zone"
     Name = var.daily_date_tag

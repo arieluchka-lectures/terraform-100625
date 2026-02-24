@@ -29,7 +29,7 @@ resource "aws_vpc" "main" {
 
   tags = {
     Name = "main-vpc"
-     Name = var.daily_date_tag
+    Name = var.daily_date_tag
   }
 }
 
@@ -65,7 +65,7 @@ resource "aws_subnet" "private" {
 
   tags = {
     Name = "private-subnet"
-     Name = var.daily_date_tag
+    Name = var.daily_date_tag
   }
 }
 
@@ -78,7 +78,7 @@ resource "aws_eip" "nat" {
 
   tags = {
     Name = "nat-eip"
-     Name = var.daily_date_tag
+    Name = var.daily_date_tag
   }
 }
 
@@ -88,7 +88,7 @@ resource "aws_nat_gateway" "main" {
 
   tags = {
     Name = "main-nat-gateway"
-     Name = var.daily_date_tag
+    Name = var.daily_date_tag
   }
 }
 
@@ -101,7 +101,7 @@ resource "aws_route_table" "public" {
 
   tags = {
     Name = "public-rt"
-     Name = var.daily_date_tag
+    Name = var.daily_date_tag
   }
 }
 
@@ -110,10 +110,7 @@ resource "aws_route" "public_internet_access" {
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.main.id
 
-  tags = {
-    Name = "public-internet-access"
-     Name = var.daily_date_tag
-  }
+
 }
 
 resource "aws_route_table" "private" {
@@ -121,7 +118,7 @@ resource "aws_route_table" "private" {
 
   tags = {
     Name = "private-rt"
-     Name = var.daily_date_tag
+    Name = var.daily_date_tag
   }
 }
 
@@ -130,10 +127,7 @@ resource "aws_route" "private_nat_access" {
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.main.id
 
-  tags = {
-    Name = "private-nat-access"
-     Name = var.daily_date_tag
-  }
+
 }
 
 # ============================================
@@ -144,20 +138,15 @@ resource "aws_route_table_association" "public" {
   subnet_id      = aws_subnet.public.id
   route_table_id = aws_route_table.public.id
 
-  tags = {
-    Name = "public-rt-association"
-     Name = var.daily_date_tag
-  }
+
 }
+
 
 resource "aws_route_table_association" "private" {
   subnet_id      = aws_subnet.private.id
   route_table_id = aws_route_table.private.id
 
-  tags = {
-    Name = "private-rt-association"
-     Name = var.daily_date_tag
-  }
+
 }
 
 # ============================================
@@ -203,6 +192,37 @@ resource "aws_security_group" "app_server" {
     security_groups = [aws_security_group.bastion.id]
   }
 
+  ingress {
+    description     = "Teamspeak voice traffic"
+    from_port       = 9987
+    to_port         = 9987
+    protocol        = "udp"
+    security_groups = [aws_security_group.bastion.id]
+    }
+
+  ingress {
+    description     = "Teamspeak query traffic"
+    from_port       = 10011
+    to_port         = 10011
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion.id]
+  }
+  ingress {
+    description     = "Teamspeak file transfer traffic"
+    from_port       = 30033
+    to_port         = 30033
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion.id]
+  }
+
+  ingress {
+    description     = "HTTP for TS3 Webinterface"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion.id]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -216,3 +236,30 @@ resource "aws_security_group" "app_server" {
   }
 }
 
+# ============================================
+# Part 7: Dns
+# ============================================
+
+resource "aws_route53_zone" "private_zone" {
+  name = "teamspeak.example.com"
+
+  tags = {
+    Name = "private-zone"
+    Name = var.daily_date_tag
+  }
+
+}
+resource "aws_route53_zone" "public_zone" {
+  name = "example.com"
+
+  tags = {
+    Name = "public-zone"
+    Name = var.daily_date_tag
+  }
+
+}
+resource "aws_route53_zone_association" "private_zone_association" {
+  zone_id = aws_route53_zone.private_zone.zone_id
+  vpc_id  = aws_vpc.main.id
+
+}

@@ -20,12 +20,12 @@ cd /home/ec2-user/sergey-app
 #install git
 sudo yum install git -y
 
-git clone https://github.com/arieluchka-lectures/terraform-100625/
+sudo git clone https://github.com/arieluchka-lectures/terraform-100625/
 
 cd terraform-100625
 
 # Switch branch
-git switch Sergey
+sudo git switch Sergey
 
 # Navigate to the docker compose file location
 cd 010-One_Click_Apps/Stirling-PDF/Sergey

@@ -164,7 +164,7 @@ resource "aws_security_group" "loadbalancer" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-    ingress {
+  ingress {
     description = "Teamspeak voice traffic"
     from_port   = 9987
     to_port     = 9987
@@ -277,29 +277,31 @@ resource "aws_security_group" "app_server" {
 # Part 7: Dns
 # ============================================
 resource "aws_route53_zone" "public_zone" {
-  name = "wizardnet.100625.lol"
-  lifecycle {
-    ignore_changes = [vpc]
-
-  }
-  tags = {
-    Name = "public-zone"
-    date = var.daily_date_tag
-  }
-
+  name         = "wizardnet.100625.lol"
+  zone_id      = "Z091686525OM56S61OWF3" #the id for the zone wizardnet.100625.lol
+  private_zone = false
+}
+tags = {
+  Name = "public-zone"
+  date = var.daily_date_tag
 }
 resource "aws_route53_zone_association" "public_zone_association" {
   zone_id = aws_route53_zone.public_zone.zone_id
-  subnet_id = aws_subnet.public.id
-  vpc_id  = aws_vpc.main.id
 
 }
 
-resource "aws_route53_record" "public_record" {
+resource "aws_route53_record" "load_balancer_record" {
   zone_id = aws_route53_zone.public_zone.zone_id
   name    = "teamspeak.wizardnet.100625.lol"
   type    = "A"
   ttl     = 300
-  records = [aws_instance.app_server.private_ip]#need to change this to the loadbalancer's IP once set up to load the app server 
+  records = [aws_lb.loadbalancer.dns_name]
+}
 
+resource "aws_route53_record" "app_server_record" {
+  zone_id = aws_route53_zone.public_zone.zone_id
+  name    = "appserver.wizardnet.100625.lol"
+  type    = "A"
+  ttl     = 300
+  records = [aws_instance.app_server.public_ip]
 }

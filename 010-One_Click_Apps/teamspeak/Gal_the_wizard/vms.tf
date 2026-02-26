@@ -38,22 +38,3 @@ resource "aws_instance" "app_server" {
   }
 }
 
-# ============================================
-# Load Balancer
-# ============================================
-resource "aws_lb" "loadbalancer" {
-  name               = "app-server-lb"
-  internal           = false
-  load_balancer_type = "network"
-  security_groups    = [aws_security_group.loadbalancer.id]
-  subnets            = [aws_subnet.public.id, aws_subnet.private.id]
-  access_logs {
-    enabled = false
-  }
-
-  tags = {
-    Name = "app-server-lb"
-    Name = var.daily_date_tag
-  }
-
-}

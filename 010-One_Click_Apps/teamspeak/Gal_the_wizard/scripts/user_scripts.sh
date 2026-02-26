@@ -34,9 +34,8 @@ sudo chmod +x /usr/local/bin/docker-compose
 docker-compose version >> /home/ec2-user/log.txt
 sudo systemctl enable docker
 sudo systemctl start docker
-
 cd /home/ec2-user/
-sudo docker compose up -d
+sudo docker-compose up -d
               
 
               

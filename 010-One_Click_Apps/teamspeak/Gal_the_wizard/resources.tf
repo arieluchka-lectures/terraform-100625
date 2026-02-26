@@ -152,20 +152,19 @@ resource "aws_route_table_association" "private" {
 # ============================================
 # Part 6: Security Groups
 # ============================================
-
-resource "aws_security_group" "bastion" {
-  name        = "bastion-sg"
-  description = "Security group for bastion host"
+resource "aws_security_group" "loadbalancer" {
+  name        = "loadbalancer-sg"
+  description = "Security group for load balancer"
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    description = "SSH from anywhere"
-    from_port   = 22
-    to_port     = 22
+    description = "HTTP from anywhere"
+    from_port   = 80
+    to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  ingress {
+    ingress {
     description = "Teamspeak voice traffic"
     from_port   = 9987
     to_port     = 9987
@@ -192,6 +191,19 @@ resource "aws_security_group" "bastion" {
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["176.228.47.195/32"] # Only allow HTTP from my home IP for security  
+  }
+}
+resource "aws_security_group" "bastion" {
+  name        = "bastion-sg"
+  description = "Security group for bastion host"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description = "SSH from anywhere"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
   egress {
     from_port   = 0
@@ -264,19 +276,6 @@ resource "aws_security_group" "app_server" {
 # ============================================
 # Part 7: Dns
 # ============================================
-
-resource "aws_route53_zone" "private_zone" {
-  name = "private.wizardnet.100625.lol"
-  lifecycle {
-    ignore_changes = [vpc]
-
-  }
-  tags = {
-    Name = "private-zone"
-    date = var.daily_date_tag
-  }
-
-}
 resource "aws_route53_zone" "public_zone" {
   name = "wizardnet.100625.lol"
   lifecycle {
@@ -289,8 +288,18 @@ resource "aws_route53_zone" "public_zone" {
   }
 
 }
-resource "aws_route53_zone_association" "private_zone_association" {
-  zone_id = aws_route53_zone.private_zone.zone_id
+resource "aws_route53_zone_association" "public_zone_association" {
+  zone_id = aws_route53_zone.public_zone.zone_id
+  subnet_id = aws_subnet.public.id
   vpc_id  = aws_vpc.main.id
+
+}
+
+resource "aws_route53_record" "public_record" {
+  zone_id = aws_route53_zone.public_zone.zone_id
+  name    = "teamspeak.wizardnet.100625.lol"
+  type    = "A"
+  ttl     = 300
+  records = [aws_instance.app_server.private_ip]#need to change this to the loadbalancer's IP once set up to load the app server 
 
 }

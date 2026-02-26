@@ -37,3 +37,7 @@ resource "aws_instance" "app_server" {
     Name = var.daily_date_tag
   }
 }
+
+# ============================================
+# Load Balancer
+# ============================================

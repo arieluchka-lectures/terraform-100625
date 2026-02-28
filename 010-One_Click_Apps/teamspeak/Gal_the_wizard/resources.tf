@@ -167,13 +167,7 @@ resource "aws_security_group" "loadbalancer" {
   description = "Security group for load balancer"
   vpc_id      = aws_vpc.main.id
 
-  ingress {
-    description = "HTTP from anywhere"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+
   ingress {
     description = "Teamspeak voice traffic"
     from_port   = 9987
@@ -244,7 +238,7 @@ resource "aws_security_group" "app_server" {
     from_port       = 9987
     to_port         = 9987
     protocol        = "udp"
-    security_groups = [aws_security_group.bastion.id]
+    security_groups = [aws_security_group.loadbalancer.id]
   }
 
   ingress {
@@ -252,14 +246,14 @@ resource "aws_security_group" "app_server" {
     from_port       = 10011
     to_port         = 10011
     protocol        = "tcp"
-    security_groups = [aws_security_group.bastion.id]
+    security_groups = [aws_security_group.loadbalancer.id]
   }
   ingress {
     description     = "Teamspeak file transfer traffic"
     from_port       = 30033
     to_port         = 30033
     protocol        = "tcp"
-    security_groups = [aws_security_group.bastion.id]
+    security_groups = [aws_security_group.loadbalancer.id]
   }
 
   ingress {
@@ -267,7 +261,7 @@ resource "aws_security_group" "app_server" {
     from_port       = 80
     to_port         = 80
     protocol        = "tcp"
-    security_groups = [aws_security_group.bastion.id]
+    security_groups = [aws_security_group.loadbalancer.id]
   }
 
   egress {

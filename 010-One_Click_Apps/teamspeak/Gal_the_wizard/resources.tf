@@ -189,12 +189,12 @@ resource "aws_security_group" "loadbalancer" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  ingress {
-    description = "HTTP for TS3 Webinterface"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["176.228.47.195/32"] # Only allow HTTP from my home IP for security  
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 resource "aws_security_group" "bastion" {
@@ -256,13 +256,6 @@ resource "aws_security_group" "app_server" {
     security_groups = [aws_security_group.loadbalancer.id]
   }
 
-  ingress {
-    description     = "HTTP for TS3 Webinterface"
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = [aws_security_group.loadbalancer.id]
-  }
 
   egress {
     from_port   = 0
@@ -288,6 +281,7 @@ resource "aws_route53_zone" "public_zone" {
     date = var.daily_date_tag
   }
 }
+
 resource "aws_route53_zone_association" "public_zone_association" {
   zone_id = aws_route53_zone.public_zone.zone_id
   vpc_id  = aws_vpc.main.id

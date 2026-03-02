@@ -20,7 +20,7 @@ In order to prepare the instaltion app follow next steps:
    (terraform init command creates a required terraform files, while terraform apply command creates a AWS VPS with a EC2 instance with public ip and additional resources, in order succeed a proper ssh server connection. 
    Additional used files are: output.tf file, which presents an output of the App login credentials, a public ip and a ssh comand for the server connection. After ssh server connectivity, start_script.sh is running in order to update system packages, installs docker, creates app directory, installs git, download docker compose cli-plugins and at last, run a docker compose up command which downloads the Apps image, creates container and raise the Stirling-PDF App)
    
-   Min after executed terraform apply command, use the App's login command
+   - Min after executed terraform apply command, use the App's login command.
 4. A login command is:
 
    http://localhost:9080/login (unstead of localhost, use the public ip created via AWS and presented at the PowerShell output,
@@ -30,6 +30,7 @@ In order to prepare the instaltion app follow next steps:
 5. Default Login Credentials to the App:
 
    Username: admin
+
    Password: stirling
 
    (After that set a new password)

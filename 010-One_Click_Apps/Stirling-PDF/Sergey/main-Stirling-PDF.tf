@@ -84,60 +84,6 @@ resource "aws_route_table_association" "public" {
 }
 
 
-# ============================================
-# Part 6: ACL's
-# ============================================
-
-# resource "aws_network_acl" "main" {
-#   vpc_id     = aws_vpc.main.id
-#   subnet_ids = [aws_subnet.public.id]
-
-#   ingress { #SSH
-#     protocol   = "tcp"
-#     rule_no    = 100
-#     action     = "allow"
-#     cidr_block = "0.0.0.0/0" 
-#     from_port  = 22
-#     to_port    = 22
-#   }
-
-# ingress {
-#     protocol   = "tcp"
-#     rule_no    = 110
-#     action     = "allow"
-#     cidr_block = "0.0.0.0/0" 
-#     from_port  = 1024
-#     to_port    = 65535
-#   }
-
-# ingress { # Stirling-PDF
-#     protocol   = "tcp"
-#     rule_no    = 200
-#     action     = "allow"
-#     cidr_block = "0.0.0.0/0" 
-#     from_port  = 9080
-#     to_port    = 9080
-#   }
-
-# ingress { # Stirling-PDF
-#     protocol   = "tcp"
-#     rule_no    = 300
-#     action     = "deny"
-#     cidr_block = "0.0.0.0/0" 
-#     from_port  = 0
-#     to_port    = 0
-#   }
-
-# egress {
-#     protocol   = "-1"
-#     rule_no    = 90
-#     action     = "allow"
-#     cidr_block = "0.0.0.0/0"
-#     from_port  = 0
-#     to_port    = 0
-#   }
-
-# }
 
 
 # ============================================
@@ -207,21 +153,4 @@ resource "local_file" "private_key" {
 resource "aws_key_pair" "public_key" {
   key_name = "ssh_key"
   public_key = tls_private_key.ssh_key.public_key_openssh
-}
-
-
-output "public_ip" {
-  value = aws_instance.app_server.public_ip
-  
-}
-
-output "vpc_id" {
-  value = aws_vpc.main.id
-  
-}
-
-output "ssh_command" {
- 
-  value = "ssh -i ${local_file.private_key.filename} ec2-user@${aws_instance.app_server.public_ip}"
-
 }

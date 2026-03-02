@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#update system packages
 sudo yum update -y 
 
 # Install docker
@@ -9,8 +10,12 @@ sudo systemctl start docker
 
 sudo systemctl enable docker
 
-# Install docker compose plugin 
-sudo yum install docker-compose-plugin -y
+# Create app directory
+sudo mkdir -p /usr/libexec/docker/cli-plugins
+
+sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/libexec/docker/cli-plugins/docker-compose
+
+sudo chmod +x /usr/libexec/docker/cli-plugins/docker-compose
 
 # Create app directory
 mkdir -p /home/ec2-user/sergey-app
@@ -30,4 +35,5 @@ sudo git switch Sergey
 # Navigate to the docker compose file location
 cd 010-One_Click_Apps/Stirling-PDF/Sergey
 
+# run docker compose
 sudo docker compose up -d

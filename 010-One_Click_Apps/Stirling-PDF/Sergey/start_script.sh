@@ -1,14 +1,14 @@
 #!/bin/bash
 
 #update system packages
-sudo yum update -y 
+yum update -y 
 
 # Install docker
-sudo yum install docker -y
+yum install docker -y
 
-sudo systemctl start docker
+systemctl start docker
 
-sudo systemctl enable docker
+systemctl enable docker
 
 # Create app directory
 sudo mkdir -p /usr/libexec/docker/cli-plugins
@@ -17,7 +17,7 @@ sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-
 
 sudo chmod +x /usr/libexec/docker/cli-plugins/docker-compose
 
-# Create app directory
+
 mkdir -p /home/ec2-user/sergey-app
 
 cd /home/ec2-user/sergey-app

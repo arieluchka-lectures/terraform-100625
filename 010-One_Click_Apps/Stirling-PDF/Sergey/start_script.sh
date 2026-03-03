@@ -11,11 +11,11 @@ systemctl start docker
 systemctl enable docker
 
 # Create app directory
-sudo mkdir -p /usr/libexec/docker/cli-plugins
+mkdir -p /usr/libexec/docker/cli-plugins
 
-sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/libexec/docker/cli-plugins/docker-compose
+curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/libexec/docker/cli-plugins/docker-compose
 
-sudo chmod +x /usr/libexec/docker/cli-plugins/docker-compose
+chmod +x /usr/libexec/docker/cli-plugins/docker-compose
 
 
 mkdir -p /home/ec2-user/sergey-app
@@ -23,17 +23,17 @@ mkdir -p /home/ec2-user/sergey-app
 cd /home/ec2-user/sergey-app
 
 #install git
-sudo yum install git -y
+yum install git -y
 
-sudo git clone https://github.com/arieluchka-lectures/terraform-100625/
+git clone https://github.com/arieluchka-lectures/terraform-100625/
 
 cd terraform-100625
 
 # Switch branch
-sudo git switch Sergey
+git switch Sergey
 
 # Navigate to the docker compose file location
 cd 010-One_Click_Apps/Stirling-PDF/Sergey
 
 # run docker compose
-sudo docker compose up -d
+docker compose up -d

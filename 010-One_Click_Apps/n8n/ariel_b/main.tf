@@ -1,25 +1,4 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-    tls = {
-      source  = "hashicorp/tls"
-      version = "~> 4.0"
-    }
-    local = {
-      source  = "hashicorp/local"
-      version = "~> 2.0"
-    }
-  }
-}
-
-provider "aws" {
-  region = "us-east-1"
-}
-
-data "aws_region" "current" {}
+# VPC ---
 
 resource "aws_vpc" "n8n-vpc" {
   cidr_block           = "10.0.0.0/16"
@@ -27,10 +6,12 @@ resource "aws_vpc" "n8n-vpc" {
   enable_dns_support   = true
 
   tags = {
-    Name = "n8n_vpc"
-    Practice = "n8n_terraform_practice"
+    Name = "${var.resource_name}_vpc"
+    Practice = "${var.service_name}terraform_practice"
   }
 }
+
+# Subnet ---
 
 resource "aws_subnet" "n8n-subnet" {
   vpc_id                  = aws_vpc.n8n-vpc.id
@@ -39,17 +20,19 @@ resource "aws_subnet" "n8n-subnet" {
   map_public_ip_on_launch = false
 
   tags = {
-    Name = "n8n-subnet"
-    Practice = "n8n_terraform_practice"
+    Name = "${var.resource_name}subnet"
+    Practice = "${var.service_name}terraform_practice"
   }
 }
+
+# Route Table ---
 
 resource "aws_route_table" "n8n-route-table" {
   vpc_id = aws_vpc.n8n-vpc.id
 
   tags = {
-    Name = "n8n-route-table"
-    Practice = "n8n_terraform_practice"
+    Name = "${var.resource_name}route-table"
+    Practice = "${var.service_name}terraform_practice"
   }
 
   route {
@@ -63,22 +46,28 @@ resource "aws_route_table_association" "assaciation" {
   route_table_id = aws_route_table.n8n-route-table.id
 }
 
+
+# Internet Gateway ---
+
 resource "aws_internet_gateway" "n8n_igw" {
   vpc_id = aws_vpc.n8n-vpc.id
 
   tags = {
-    Name = "n8n-igw"
-    Practice = "n8n_terraform_practice"
+    Name = "${var.resource_name}igw"
+    Practice = "${var.service_name}terraform_practice"
   }
 }
+
+
+# Elastic IP ---
 
 resource "aws_eip" "n8n-eip" {
   instance = aws_instance.n8n-server.id
   domain = "vpc"
 
   tags = {
-    Name = "n8n-eip"
-    Practice = "n8n_terraform_practice"
+    Name = "${var.resource_name}eip"
+    Practice = "${var.service_name}terraform_practice"
   }
 }
 
@@ -87,7 +76,7 @@ resource "aws_eip_association" "n8n-eip-assaciation" {
   allocation_id = aws_eip.n8n-eip.id
 }
 
-
+# Network ACL ---
 
 resource "aws_network_acl" "n8n-nacl" {
   vpc_id     = aws_vpc.n8n-vpc.id
@@ -175,10 +164,13 @@ resource "aws_network_acl" "n8n-nacl" {
   }
 
   tags = {
-    Name = "n8n-nacl"
-    Practice = "n8n_terraform_practice"
+    Name = "${var.resource_name}nacl"
+    Practice = "${var.service_name}terraform_practice"
   }
 }
+
+
+# Security Group ---
 
 resource "aws_security_group" "n8n-sg" {
   name        = "n8n-sg"
@@ -194,8 +186,8 @@ resource "aws_security_group" "n8n-sg" {
   }
   
   tags = {
-    Name = "n8n-sg"
-    Practice = "n8n_terraform_practice"
+    Name = "${var.resource_name}sg"
+    Practice = "${var.service_name}terraform_practice"
   }
 }
 
@@ -226,6 +218,9 @@ resource "aws_security_group_rule" "allow-icmp" {
   protocol = "icmp"
 }
 
+
+# SSH Key ---
+
 resource "tls_private_key" "ssh_key" {
   algorithm = "RSA"
   rsa_bits = 4096
@@ -243,10 +238,13 @@ resource "aws_key_pair" "private_key_for_instance" {
   public_key = tls_private_key.ssh_key.public_key_openssh
 
   tags = {
-    Name = "n8n-key"
-    Practice = "n8n_terraform_practice"
+    Name = "${var.resource_name}key"
+    Practice = "${var.service_name}terraform_practice"
   }
 }
+
+
+# EC2 Instance ---
 
 resource "aws_instance" "n8n-server" {
   ami           = "ami-0532be01f26a3de55"
@@ -258,9 +256,9 @@ resource "aws_instance" "n8n-server" {
   key_name = aws_key_pair.private_key_for_instance.key_name
 
   user_data = file("./start_script.sh")
-  
+
   tags = {
-    Name = "n8n-server"
-    Practice = "n8n_terraform_practice"
+    Name = "${var.resource_name}server"
+    Practice = "${var.service_name}terraform_practice"
   }
 }

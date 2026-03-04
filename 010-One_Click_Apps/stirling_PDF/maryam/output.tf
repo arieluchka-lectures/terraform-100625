@@ -21,14 +21,3 @@ Open in browser:
   http://${aws_instance.stirling_pdf_app.public_ip}:8080
 EOT
 }
-# sudo yum update -y
-# sudo yum install -y docker
-# sudo service docker start
-# sudo usermod -aG docker ec2-user
-# mkdir -p ~/stirling-data
-# docker run -d \
-#   --name stirling-pdf \
-#   -p 8080:8080 \
-#   -v ~/stirling-data:/configs \
-#   --restart unless-stopped \
-#   stirlingtools/stirling-pdf:latest

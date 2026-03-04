@@ -141,7 +141,7 @@ resource "aws_instance" "stirling_pdf_app" {
   vpc_security_group_ids = [aws_security_group.app_server.id]  
 
   key_name               = aws_key_pair.app_key_pair.key_name
-
+  user_data = file("${path.module}/scripts/user-data-stirling-pdf.sh")
   tags = {
     Name = "stirling-pdf-app"
   }

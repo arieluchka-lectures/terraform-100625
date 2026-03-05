@@ -8,7 +8,7 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = "${var.aws_region}"
 }
 
 
@@ -22,7 +22,10 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
   
   tags = {
-    Name = "New-S-main-vpc"
+    
+    
+    Name = "${var.VAR_NAME}-New-main-vpc"
+    
   }
 }
 
@@ -30,7 +33,7 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
   
   tags = {
-    Name = "main-igw"
+    Name = "${var.VAR_NAME}-main-igw"
   }
 }
 
@@ -42,23 +45,22 @@ resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
-  availability_zone       = "us-east-1a"
   
   tags = {
-    Name = "public-subnet"
+    Name = "${var.VAR_NAME}-public-subnet"
   }
 }
 
 
 # ============================================
-# Part 4: Route Tables
+# Part 3: Route Tables
 # ============================================
 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
   
   tags = {
-    Name = "public-rt"
+    Name = "${var.VAR_NAME}-public-rt"
   }
 }
 
@@ -71,7 +73,7 @@ resource "aws_route" "public_internet_access" {
 
 
 # ============================================
-# Part 5: Route Table Associations
+# Part 4: Route Table Associations
 # ============================================
 
 resource "aws_route_table_association" "public" {
@@ -83,13 +85,13 @@ resource "aws_route_table_association" "public" {
 
 
 # ============================================
-# Part 7: Security Groups
+# Part 5: Security Groups
 # ============================================
 
 
 
 resource "aws_security_group" "ec2_sg" {
-  name   = "ec2-public-sg"
+  name   = "${var.VAR_NAME}-ec2-public-sg"
   vpc_id = aws_vpc.main.id
 }
 
@@ -113,20 +115,59 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_outbound" {
 }
 
 # ============================================
-# Part 8: EC2 Instances
+# Part 6: EC2 Instances
 # ============================================
 resource "aws_instance" "app_server" {
   ami           = "ami-0532be01f26a3de55"
-  instance_type = "t3.small"
+  instance_type = "${var.aws_instance_type}"
   subnet_id     = aws_subnet.public.id 
   
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]  
 
   tags = {
-    Name = "New-S-instance"
+    Name = "${var.VAR_NAME}-New-instance"
   }
 
   user_data = file("${path.module}/start_script.sh")
 
 }
+# ============================================
+# Part 7: Variables
+# ============================================
+
+variable "VAR_NAME" {
+
+  type = string
+  description = "name_variable"
+  default = "Sergey"
+}
+
+
+variable "aws_region" {
+  type = string
+  default = "us-east-1"
+  
+}
+
+
+variable "aws_instance_type" {
+
+  type = string
+
+  description = "The ec2 instance type"
+
+  default = "t3.small"
+
+
+
+  validation {
+
+    condition = contains(["t3.small", "c7i-flex.large", "m7i-flex.large"], var.aws_instance_type)
+
+    error_message = "Wrong EC2 type!!!! Instance type must be: t3.small, c7i-flex.large, m7i-flex.large."
+
+  }
+
+}
+
 

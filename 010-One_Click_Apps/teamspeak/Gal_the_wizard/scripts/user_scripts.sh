@@ -3,24 +3,24 @@
 cat <<'EOT'> /home/ec2-user/docker-compose.yml
 services:
   teamspeak:
+    name: teamspeak
     image: teamspeak
     restart: always
-    ports:
-      - 9987:9987/udp
-      - 10011:10011
-      - 30033:30033
+    network_mode: host
     environment:
       TS3SERVER_DB_PLUGIN: ts3db_mariadb
       TS3SERVER_DB_SQLCREATEPATH: create_mariadb
-      TS3SERVER_DB_HOST: db
+      TS3SERVER_DB_HOST: 127.0.0.1
       TS3SERVER_DB_USER: root
       TS3SERVER_DB_PASSWORD: ${TS3SERVER_DB_PASSWORD}
       TS3SERVER_DB_NAME: ${TS3SERVER_DB_NAME}
       TS3SERVER_DB_WAITUNTILREADY: 30
       TS3SERVER_LICENSE: accept
   db:
+    name: db
     image: mariadb
     restart: always
+    network_mode: host
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}

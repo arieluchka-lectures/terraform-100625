@@ -35,5 +35,10 @@ git switch Sergey
 # Navigate to the docker compose file location
 cd 010-One_Click_Apps/Stirling-PDF/Sergey
 
+cat > .env <<EOF
+IMAGE_TAG=${app_image_tag}
+HOST_PORT=${app_port}
+EOF
+
 # run docker compose
 docker compose up -d

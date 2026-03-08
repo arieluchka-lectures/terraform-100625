@@ -2,10 +2,10 @@
 # Load Balancer
 # ============================================
 resource "aws_lb" "loadbalancer" {
-  name                             = "app-server-lb"
-  internal                         = false
-  load_balancer_type               = "network"
-  security_groups                  = [aws_security_group.loadbalancer.id]
+  name               = "app-server-lb"
+  internal           = false
+  load_balancer_type = "network"
+  security_groups    = [aws_security_group.loadbalancer.id]
   subnet_mapping {
     subnet_id     = aws_subnet.private.id
     allocation_id = aws_eip.lb.id

@@ -1,4 +1,6 @@
 terraform {
+  required_version = ">= 1.5.0"
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -8,56 +10,71 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = var.aws_region
+}
+
+data "aws_region" "current" {}
+
+data "aws_ami" "amazon_linux_2023" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-*-x86_64"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
 }
 
 # -------------------------
-# Networking: VPC + Subnet
+# Networking
 # -------------------------
+
 resource "aws_vpc" "main" {
-  cidr_block           = "10.0.0.0/16"
+  cidr_block           = var.vpc_cidr_block
   enable_dns_support   = true
   enable_dns_hostnames = true
 
   tags = {
-    Name = "nextcloud-vpc"
+    Name = "${var.tag_name_prefix}-vpc"
+  }
+}
+
+resource "aws_internet_gateway" "main" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "${var.tag_name_prefix}-igw"
   }
 }
 
 resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.1.0/24"
-  availability_zone       = "us-east-1a"
-  map_public_ip_on_launch = true
+  cidr_block              = var.public_subnet_cidr_block
+  availability_zone       = var.availability_zone
+  map_public_ip_on_launch = false
 
   tags = {
-    Name = "nextcloud-public-subnet"
-  }
-}
-
-# -------------------------
-# Internet Gateway + Routes
-# -------------------------
-resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.main.id
-
-  tags = {
-    Name = "nextcloud-igw"
+    Name = "${var.tag_name_prefix}-public-subnet"
   }
 }
 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
-  # 0.0.0.0/0 -> IGW
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.igw.id
-  }
-
   tags = {
-    Name = "nextcloud-public-rt"
+    Name = "${var.tag_name_prefix}-public-rt"
   }
+}
+
+resource "aws_route" "default_ipv4" {
+  route_table_id         = aws_route_table.public.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.main.id
 }
 
 resource "aws_route_table_association" "public" {
@@ -66,25 +83,14 @@ resource "aws_route_table_association" "public" {
 }
 
 # -------------------------
-# Elastic IP
+# NACL
 # -------------------------
-resource "aws_eip" "public_ip" {
-  domain = "vpc"
 
-  tags = {
-    Name = "nextcloud-eip"
-  }
-}
-
-# -------------------------
-# NACL (stateless) for service ports (80/443)
-# Must allow return traffic on ephemeral ports
-# -------------------------
-resource "aws_network_acl" "public" {
+resource "aws_network_acl" "public_nacl" {
   vpc_id     = aws_vpc.main.id
   subnet_ids = [aws_subnet.public.id]
 
-  # Inbound: allow HTTP/HTTPS from anywhere
+  # Inbound HTTP
   ingress {
     rule_no    = 100
     protocol   = "tcp"
@@ -94,6 +100,7 @@ resource "aws_network_acl" "public" {
     to_port    = 80
   }
 
+  # Inbound HTTPS
   ingress {
     rule_no    = 110
     protocol   = "tcp"
@@ -103,9 +110,19 @@ resource "aws_network_acl" "public" {
     to_port    = 443
   }
 
-  # Inbound: allow ephemeral ports for return traffic
+  # Inbound SSH
   ingress {
     rule_no    = 120
+    protocol   = "tcp"
+    action     = "allow"
+    cidr_block = var.allowed_ssh_cidr
+    from_port  = 22
+    to_port    = 22
+  }
+
+  # Inbound ephemeral ports for return traffic
+  ingress {
+    rule_no    = 130
     protocol   = "tcp"
     action     = "allow"
     cidr_block = "0.0.0.0/0"
@@ -113,7 +130,7 @@ resource "aws_network_acl" "public" {
     to_port    = 65535
   }
 
-  # Outbound: allow HTTP/HTTPS out
+  # Outbound HTTP
   egress {
     rule_no    = 100
     protocol   = "tcp"
@@ -123,6 +140,7 @@ resource "aws_network_acl" "public" {
     to_port    = 80
   }
 
+  # Outbound HTTPS
   egress {
     rule_no    = 110
     protocol   = "tcp"
@@ -132,7 +150,7 @@ resource "aws_network_acl" "public" {
     to_port    = 443
   }
 
-  # Outbound: allow ephemeral ports (common for responses)
+  # Outbound ephemeral ports
   egress {
     rule_no    = 120
     protocol   = "tcp"
@@ -143,16 +161,17 @@ resource "aws_network_acl" "public" {
   }
 
   tags = {
-    Name = "nextcloud-public-nacl"
+    Name = "${var.tag_name_prefix}-public-nacl"
   }
 }
 
 # -------------------------
-# Security Group for service ports (stateful)
+# Security Group
 # -------------------------
-resource "aws_security_group" "service_sg" {
-  name        = "nextcloud-service-sg"
-  description = "Allow web traffic to Nextcloud"
+
+resource "aws_security_group" "web_sg" {
+  name        = "${var.tag_name_prefix}-web-sg"
+  description = "Allow web and SSH access"
   vpc_id      = aws_vpc.main.id
 
   ingress {
@@ -171,9 +190,16 @@ resource "aws_security_group" "service_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Stateful SG: outbound typically allow all
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.allowed_ssh_cidr]
+  }
+
   egress {
-    description = "Allow all outbound"
+    description = "All outbound"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -181,56 +207,33 @@ resource "aws_security_group" "service_sg" {
   }
 
   tags = {
-    Name = "nextcloud-service-sg"
+    Name = "${var.tag_name_prefix}-web-sg"
   }
 }
 
 # -------------------------
-# Outputs
+# IAM for SSM
 # -------------------------
-output "vpc_id" {
-  value = aws_vpc.main.id
-}
 
-output "public_subnet_id" {
-  value = aws_subnet.public.id
-}
-
-output "eip_allocation_id" {
-  value = aws_eip.public_ip.id
-}
-
-output "service_sg_id" {
-  value = aws_security_group.service_sg.id
-}
-
-# -------------------------
-# AMI: Amazon Linux 2023
-# -------------------------
-data "aws_ami" "al2023" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["al2023-ami-*-x86_64"]
-  }
-}
-
-# -------------------------
-# IAM: SSM role/profile for EC2
-# -------------------------
 resource "aws_iam_role" "ec2_ssm_role" {
-  name = "nextcloud-ec2-ssm-role"
+  name = "${var.tag_name_prefix}-ec2-ssm-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = { Service = "ec2.amazonaws.com" }
-    }]
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
   })
+
+  tags = {
+    Name = "${var.tag_name_prefix}-ec2-ssm-role"
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "ssm_core" {
@@ -239,42 +242,52 @@ resource "aws_iam_role_policy_attachment" "ssm_core" {
 }
 
 resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "nextcloud-ec2-profile"
+  name = "${var.tag_name_prefix}-ec2-profile"
   role = aws_iam_role.ec2_ssm_role.name
 }
 
 # -------------------------
-# EC2: Nextcloud host
+# EC2
 # -------------------------
-resource "aws_instance" "nextcloud" {
-  ami                    = data.aws_ami.al2023.id
-  instance_type          = "t3.small" 
-  subnet_id              = aws_subnet.public.id
-  vpc_security_group_ids = [aws_security_group.service_sg.id]
-  iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
+
+resource "aws_instance" "web" {
+  ami                         = data.aws_ami.amazon_linux_2023.id
+  instance_type               = var.instance_type
+  subnet_id                   = aws_subnet.public.id
+  vpc_security_group_ids      = [aws_security_group.web_sg.id]
+  iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
+  associate_public_ip_address = false
+  user_data                   = file("${path.module}/script.sh")
+  user_data_replace_on_change = true
 
   root_block_device {
-    volume_size = 30
-    volume_type = "gp3"
+    volume_size           = var.root_volume_size
+    volume_type           = "gp3"
+    delete_on_termination = true
   }
 
   tags = {
-    Name = "nextcloud-ec2"
+    Name = "${var.tag_name_prefix}-web-instance"
+  }
+
+  depends_on = [
+    aws_internet_gateway.main
+  ]
+}
+
+# -------------------------
+# Elastic IP
+# -------------------------
+
+resource "aws_eip" "web_eip" {
+  domain = "vpc"
+
+  tags = {
+    Name = "${var.tag_name_prefix}-eip"
   }
 }
 
-# -------------------------
-# Attach the Elastic IP to EC2
-# -------------------------
-resource "aws_eip_association" "nextcloud_eip" {
-  allocation_id = aws_eip.public_ip.id
-  instance_id   = aws_instance.nextcloud.id
-}
-
-output "instance_id" {
-  value = aws_instance.nextcloud.id
-}
-
-output "elastic_ip" {
-  value = aws_eip.public_ip.public_ip
+resource "aws_eip_association" "web_eip_assoc" {
+  instance_id   = aws_instance.web.id
+  allocation_id = aws_eip.web_eip.id
 }

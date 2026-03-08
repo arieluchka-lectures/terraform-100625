@@ -128,7 +128,10 @@ resource "aws_instance" "app_server" {
     Name = "${var.VAR_NAME}-New-instance"
   }
 
-  user_data = file("${path.module}/start_script.sh")
+  user_data = templatefile("${path.module}/start_script.sh", 
+  {app_port = var.app_port
+   app_image_tag = var.app_image_tag
+  })
 
 }
 # ============================================
@@ -136,7 +139,6 @@ resource "aws_instance" "app_server" {
 # ============================================
 
 variable "VAR_NAME" {
-
   type = string
   description = "name_variable"
   default = "Sergey"
@@ -146,13 +148,16 @@ variable "VAR_NAME" {
 variable "aws_region" {
   type = string
   default = "us-east-1"
-  
 }
 
 variable "app_port" {
   type = number
   default = 9080
-  
+}
+
+variable "app_image_tag" {
+  type = string
+  default = "latest"
 }
 
 variable "aws_instance_type" {
@@ -163,8 +168,6 @@ variable "aws_instance_type" {
 
   default = "t3.small"
 
-
-
   validation {
 
     condition = contains(["t3.small", "c7i-flex.large", "m7i-flex.large"], var.aws_instance_type)
@@ -172,7 +175,6 @@ variable "aws_instance_type" {
     error_message = "Wrong EC2 type!!!! Instance type must be: t3.small, c7i-flex.large, m7i-flex.large."
 
   }
-
 }
 
 

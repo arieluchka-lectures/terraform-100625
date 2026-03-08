@@ -2,10 +2,10 @@
 # Load Balancer
 # ============================================
 resource "aws_lb" "loadbalancer" {
-  name               = "app-server-lb"
-  internal           = false
-  load_balancer_type = "network"
-  security_groups    = [aws_security_group.loadbalancer.id]
+  name                             = "app-server-lb"
+  internal                         = false
+  load_balancer_type               = "network"
+  security_groups                  = [aws_security_group.loadbalancer.id]
   subnet_mapping {
     subnet_id     = aws_subnet.private.id
     allocation_id = aws_eip.lb.id
@@ -38,9 +38,14 @@ resource "aws_lb_target_group" "app_server_voice_tg" {
   port     = 9987
   protocol = "UDP"
   vpc_id   = aws_vpc.main.id
+
   health_check {
     protocol = "TCP"
     port     = 10011
+  }
+  stickiness {
+    type    = "source_ip"
+    enabled = true
   }
 }
 

@@ -8,7 +8,7 @@
 resource "aws_route53_zone" "public_zone" {
   name = "wizardnet.100625.lol"
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
   tags = {
     Name = "public-zone"

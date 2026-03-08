@@ -197,6 +197,9 @@ resource "aws_security_group" "loadbalancer" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+#============================================
+#bastion
+#============================================
 resource "aws_security_group" "bastion" {
   name        = "bastion-sg"
   description = "Security group for bastion host"
@@ -220,6 +223,9 @@ resource "aws_security_group" "bastion" {
     date = var.daily_date_tag
   }
 }
+#============================================
+#app server
+#============================================
 resource "aws_security_group" "app_server" {
   name        = "app-server-sg"
   description = "Security group for application server"
@@ -234,26 +240,27 @@ resource "aws_security_group" "app_server" {
   }
 
   ingress {
-    description     = "Teamspeak voice traffic"
-    from_port       = 9987
-    to_port         = 9987
-    protocol        = "udp"
-    security_groups = [aws_security_group.loadbalancer.id]
+    description = "Teamspeak voice traffic"
+    from_port   = 9987
+    to_port     = 9987
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
+
   ingress {
-    description     = "Teamspeak query traffic"
-    from_port       = 10011
-    to_port         = 10011
-    protocol        = "tcp"
-    security_groups = [aws_security_group.loadbalancer.id]
+    description = "Teamspeak query traffic"
+    from_port   = 10011
+    to_port     = 10011
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
-    description     = "Teamspeak file transfer traffic"
-    from_port       = 30033
-    to_port         = 30033
-    protocol        = "tcp"
-    security_groups = [aws_security_group.loadbalancer.id]
+    description = "Teamspeak file transfer traffic"
+    from_port   = 30033
+    to_port     = 30033
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
 

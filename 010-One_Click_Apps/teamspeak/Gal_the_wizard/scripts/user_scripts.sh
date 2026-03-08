@@ -3,7 +3,7 @@
 cat <<'EOT'> /home/ec2-user/docker-compose.yml
 services:
   teamspeak:
-    name: teamspeak
+    container_name: teamspeak
     image: teamspeak
     restart: always
     network_mode: host
@@ -17,7 +17,7 @@ services:
       TS3SERVER_DB_WAITUNTILREADY: 30
       TS3SERVER_LICENSE: accept
   db:
-    name: db
+    container_name: db
     image: mariadb
     restart: always
     network_mode: host

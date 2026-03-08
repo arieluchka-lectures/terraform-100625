@@ -91,14 +91,14 @@ resource "aws_network_acl" "n8n-nacl" {
     to_port    = 5678
   }
 
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 110
-    action     = "allow"
-    cidr_block = "79.177.133.111/32"
-    from_port  = 22
-    to_port    = 22
-  }
+#   ingress {
+#     protocol   = "tcp"
+#     rule_no    = 110
+#     action     = "allow"
+#     cidr_block = "79.177.133.111/32"
+#     from_port  = 22
+#     to_port    = 22
+#   }
 
   ingress {
     protocol   = "tcp"
@@ -127,14 +127,14 @@ resource "aws_network_acl" "n8n-nacl" {
     to_port    = 65535
   }
 
-  egress {
-    protocol   = "tcp"
-    rule_no    = 110
-    action     = "allow"
-    cidr_block = "79.177.133.111/32"
-    from_port  = 22
-    to_port    = 22
-  }
+#   egress {
+#     protocol   = "tcp"
+#     rule_no    = 110
+#     action     = "allow"
+#     cidr_block = "79.177.133.111/32"
+#     from_port  = 22
+#     to_port    = 22
+#   }
 
  egress {
     protocol   = "tcp"
@@ -191,14 +191,14 @@ resource "aws_security_group" "n8n-sg" {
   }
 }
 
-resource "aws_security_group_rule" "allow-ssh" {
-  security_group_id = aws_security_group.n8n-sg.id
-  cidr_blocks = ["79.177.133.111/32"]
-  type = "ingress"
-  to_port = 22
-  from_port = 22
-  protocol = "tcp"
-}
+# resource "aws_security_group_rule" "allow-ssh" {
+#   security_group_id = aws_security_group.n8n-sg.id
+#   cidr_blocks = ["79.177.133.111/32"]
+#   type = "ingress"
+#   to_port = 22
+#   from_port = 22
+#   protocol = "tcp"
+# }
 
 resource "aws_security_group_rule" "allow-n8n-port" {
   security_group_id = aws_security_group.n8n-sg.id
@@ -221,27 +221,27 @@ resource "aws_security_group_rule" "allow-icmp" {
 
 # SSH Key ---
 
-resource "tls_private_key" "ssh_key" {
-  algorithm = "RSA"
-  rsa_bits = 4096
-}
+# resource "tls_private_key" "ssh_key" {
+#   algorithm = "RSA"
+#   rsa_bits = 4096
+# }
 
-resource "local_file" "private_key" {
-  content = tls_private_key.ssh_key.private_key_pem
-  filename = "C:/Users/abm25/.ssh/n8n_key.pem"
-  file_permission = "0400"
-}
+# resource "local_file" "private_key" {
+#   content = tls_private_key.ssh_key.private_key_pem
+#   filename = "C:/Users/abm25/.ssh/n8n_key.pem"
+#   file_permission = "0400"
+# }
 
 
-resource "aws_key_pair" "private_key_for_instance" {
-  key_name = "n8n-key"
-  public_key = tls_private_key.ssh_key.public_key_openssh
+# resource "aws_key_pair" "private_key_for_instance" {
+#   key_name = "n8n-key"
+#   public_key = tls_private_key.ssh_key.public_key_openssh
 
-  tags = {
-    Name = "${var.resource_name}key"
-    Practice = "${var.service_name}terraform_practice"
-  }
-}
+#   tags = {
+#     Name = "${var.resource_name}key"
+#     Practice = "${var.service_name}terraform_practice"
+#   }
+# }
 
 
 # EC2 Instance ---
@@ -253,7 +253,7 @@ resource "aws_instance" "n8n-server" {
   
   vpc_security_group_ids = [aws_security_group.n8n-sg.id]
   
-  key_name = aws_key_pair.private_key_for_instance.key_name
+#   key_name = aws_key_pair.private_key_for_instance.key_name
 
   user_data = file("./start_script.sh")
 

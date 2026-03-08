@@ -7,6 +7,9 @@
 #=============================================
 resource "aws_route53_zone" "public_zone" {
   name = "wizardnet.100625.lol"
+  lifecycle {
+    prevent_destroy = true
+  }
   tags = {
     Name = "public-zone"
     date = var.daily_date_tag

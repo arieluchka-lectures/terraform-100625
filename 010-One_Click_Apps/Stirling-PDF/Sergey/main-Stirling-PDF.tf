@@ -99,8 +99,8 @@ resource "aws_security_group" "ec2_sg" {
   # Stirling-PDF_port
 resource "aws_vpc_security_group_ingress_rule" "allow_port" {
   security_group_id = aws_security_group.ec2_sg.id
-  from_port   = 9080
-  to_port     = 9080
+  from_port   = var.app_port
+  to_port     = var.app_port
   ip_protocol = "tcp"
   cidr_ipv4 =  "0.0.0.0/0"
 }
@@ -149,6 +149,11 @@ variable "aws_region" {
   
 }
 
+variable "app_port" {
+  type = number
+  default = 9080
+  
+}
 
 variable "aws_instance_type" {
 

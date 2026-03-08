@@ -1,0 +1,5 @@
+terraform apply -var="zone_id=Z084380120DG5V3J3LYJD" -var="dns_prefix=kuku" --auto-approve
+terraform destroy -var="zone_id=Z084380120DG5V3J3LYJD" -var="dns_prefix=kuku" --auto-approve
+
+terraform apply -var="zone_id=0" -var="dns_prefix=kuku" --auto-approve
+terraform destroy -var="zone_id=0" -var="dns_prefix=kuku" --auto-approve

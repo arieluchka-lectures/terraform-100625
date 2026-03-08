@@ -7,10 +7,39 @@ terraform {
   }
 }
 
-provider "aws" { region = "us-east-1" }
+provider "aws" {
+  region = "us-east-1"
+
+
+  default_tags {
+    tags = {
+      Project     = "n8n-automation"
+      Environment = "Class-Excersize"
+      Owner       = "Regev"
+      ManagedBy   = "Terraform"
+    }
+  }
+}
+
+
+variable "zone_id" {
+  type        = string
+  description = "Route53 Zone ID (Enter '0' to skip or e.g. 'Z084380120DG5V3J3LYJD')"
+}
+
+variable "dns_prefix" {
+  type        = string
+  description = "Prefix for the DNS record (e.g. 'stam' OR you can leave empty)"  
+}
+
 
 data "http" "my_ip" {
   url = "https://v4.ident.me/"
+}
+
+data "aws_route53_zone" "selected" {
+  count   = var.zone_id == "0" ? 0 : 1
+  zone_id = var.zone_id
 }
 
 resource "aws_vpc" "main" {
@@ -23,10 +52,23 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 }
 
+# Look up AZs that support t3.micro in this region
+data "aws_ec2_instance_type_offerings" "supported_azs" {
+  filter {
+    name   = "instance-type"
+    values = ["t3.micro"]
+  }
+  location_type = "availability-zone"
+}
+
+
 resource "aws_subnet" "public" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = "10.0.1.0/24"
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
+  
+  # This picks the first AZ 
+  availability_zone       = data.aws_ec2_instance_type_offerings.supported_azs.locations[0]
 }
 
 resource "aws_route_table" "public" {
@@ -126,22 +168,39 @@ resource "aws_eip" "n8n_eip" {
 
 
 resource "aws_route53_record" "n8n_dns" {
-  zone_id = "Z084380120DG5V3J3LYJD"
-  name    = "regev.100625.lol"
+  count   = var.zone_id == "0" ? 0 : 1
+  zone_id = var.zone_id
+  name    = "${var.dns_prefix}.${trimsuffix(data.aws_route53_zone.selected[0].name, ".")}"
   type    = "A"
   ttl     = "300"
   records = [aws_eip.n8n_eip.public_ip]
 }
 
 
-output "detected_ip" {
+output "detected_own_ip" {
   value = chomp(data.http.my_ip.response_body)
 }
 
-output "n8n_url" {
-  value = "http://regev.100625.lol:5678"
+# --- Outputs ---
+output "n8n_public_ip_url" {
+  value = "http://${aws_eip.n8n_eip.public_ip}:5678"
+  depends_on = [null_resource.n8n_health_check]
 }
+
+output "n8n_dns_url" {
+  value = var.zone_id == "0" ? "DNS Not Configured" : "http://${aws_route53_record.n8n_dns[0].fqdn}:5678"
+}
+
 
 output "ssh_command" {
   value = "ssh -i ${local_file.private_key.filename} ec2-user@${aws_eip.n8n_eip.public_ip}"
+}
+
+resource "null_resource" "n8n_health_check" {
+  depends_on = [aws_instance.n8n_server, aws_eip.n8n_eip]
+
+  provisioner "local-exec" {
+    command = "do { try { $c = New-Object System.Net.Sockets.TcpClient; $c.Connect('${aws_eip.n8n_eip.public_ip}', 5678); $ok = $true; $c.Close() } catch { Start-Sleep 5; $ok = $false } } until ($ok)"
+    interpreter = ["PowerShell", "-Command"]
+  }
 }

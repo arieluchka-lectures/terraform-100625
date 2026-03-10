@@ -1,0 +1,9 @@
+services:
+  stirling-pdf:
+    image: stirlingtools/stirling-pdf:${IMAGE_TAG}
+    container_name: stirling-pdf
+    ports:
+      - '${HOST_PORT}:8080'
+    volumes:
+      - ./stirling-data:/configs
+    restart: unless-stopped

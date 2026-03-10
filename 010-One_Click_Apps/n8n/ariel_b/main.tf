@@ -262,3 +262,17 @@ resource "aws_instance" "n8n-server" {
     Practice = "${var.service_name}terraform_practice"
   }
 }
+
+# DNS ---
+
+data "aws_route53_zone" "main" {
+  name = "ariel.100625.lol"
+}
+
+resource "aws_route53_record" "n8n_dns" {
+  zone_id = data.aws_route53_zone.main.zone_id
+  name    = "n8n.ariel.100625.lol"
+  type    = "A"
+  ttl     = 300
+  records = [aws_eip.n8n-eip.public_ip]
+}

@@ -8,7 +8,7 @@ terraform {
 }
 
 provider "aws" {
-  region = "${var.aws_region}"
+  region = var.aws_region
 }
 
 
@@ -115,11 +115,64 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_outbound" {
 }
 
 # ============================================
-# Part 6: EC2 Instances
+# Part 6: ACL
+# ============================================
+resource "aws_network_acl" "new_acl" {
+    vpc_id = aws_vpc.main.id
+
+    egress {
+        protocol = "tcp"
+        rule_no = 200
+        action = "allow"
+        cidr_block = "0.0.0.0/0"
+        from_port = var.app_port
+        to_port = var.app_port
+    }
+    
+    egress {
+    protocol   = "tcp"
+    rule_no    = 210
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 1024
+    to_port    = 65535
+  }
+    
+    ingress {
+        protocol = "tcp"
+        rule_no = 100
+        action = "allow"
+        cidr_block = "0.0.0.0/0"
+        from_port = var.app_port
+        to_port = var.app_port
+    }
+
+    ingress {
+    protocol   = "tcp"
+    rule_no    = 110
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 1024
+    to_port    = 65535
+  }
+
+    tags = {
+      Name = "${var.VAR_NAME}-ACL"
+    
+  }
+}
+
+resource "aws_network_acl_association" "main_ACL" {
+  subnet_id      = aws_subnet.public.id
+  network_acl_id = aws_network_acl.new_acl.id
+}
+
+# ============================================
+# Part 7: EC2 Instances
 # ============================================
 resource "aws_instance" "app_server" {
   ami           = "ami-0532be01f26a3de55"
-  instance_type = "${var.aws_instance_type}"
+  instance_type = var.aws_instance_type
   subnet_id     = aws_subnet.public.id 
   
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]  
@@ -135,7 +188,7 @@ resource "aws_instance" "app_server" {
 
 }
 # ============================================
-# Part 7: Variables
+# Part 8: Variables
 # ============================================
 
 variable "VAR_NAME" {

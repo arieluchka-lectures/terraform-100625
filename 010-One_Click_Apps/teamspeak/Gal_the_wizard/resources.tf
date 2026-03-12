@@ -162,6 +162,11 @@ resource "aws_route_table_association" "private" {
 # ============================================
 # Part 6: Security Groups
 # ============================================
+
+#============================================
+#load balancer
+#============================================
+
 resource "aws_security_group" "loadbalancer" {
   name        = "loadbalancer-sg"
   description = "Security group for load balancer"

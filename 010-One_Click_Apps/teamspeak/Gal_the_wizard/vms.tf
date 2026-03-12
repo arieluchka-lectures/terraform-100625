@@ -9,7 +9,7 @@ resource "aws_instance" "bastion" {
 
   vpc_security_group_ids = [aws_security_group.bastion.id]
   key_name               = aws_key_pair.bastion_key.key_name
-
+  user_data = local.debug_sh # This will install debugging tools on the bastion do not set on default
 
   tags = {
     Name = "bastion-host"

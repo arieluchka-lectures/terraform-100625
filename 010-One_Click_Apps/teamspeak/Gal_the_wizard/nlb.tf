@@ -7,7 +7,7 @@ resource "aws_lb" "loadbalancer" {
   load_balancer_type = "network"
   security_groups    = [aws_security_group.loadbalancer.id]
   subnet_mapping {
-    subnet_id     = aws_subnet.private.id
+    subnet_id     = aws_subnet.public.id
     allocation_id = aws_eip.lb.id
   }
   tags = {

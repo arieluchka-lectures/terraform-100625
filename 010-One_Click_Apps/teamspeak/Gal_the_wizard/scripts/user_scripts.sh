@@ -29,13 +29,13 @@ EOT
 
 dnf update -y
 dnf install -y docker
-dnf install -y nc #netcat for debugging disable post connectivity apporval
+# dnf install -y nc #netcat for debugging disable post connectivity apporval
 sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
 docker-compose version >> ~/log.txt
 sudo systemctl enable docker
 sudo systemctl start docker
-cd ~/
+cd /home/ec2-user/
 sudo docker-compose up -d
               
 

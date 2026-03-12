@@ -8,10 +8,7 @@
 data "aws_route53_zone" "public_zone" {
   zone_id = "Z0074030LL1W8YOCAXF2"
 }
-# resource "aws_route53_zone_association" "public_zone_association" {  this is for private hosted zones saved for private dns resolution within the vpc 
-#   zone_id = aws_route53_zone.public_zone.zone_id
-#   vpc_id  = aws_vpc.main.id
-# }
+
 
 
 #=============================================  

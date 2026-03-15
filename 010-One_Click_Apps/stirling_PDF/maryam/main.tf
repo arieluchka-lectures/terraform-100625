@@ -35,9 +35,47 @@ resource "aws_subnet" "stirling_pdf_subnet" {
   }
 }
 
+# ============================================
+# NACL
+# ============================================
+resource "aws_network_acl" "stirling_pdf_nacl" {
+  vpc_id = aws_vpc.stirling_pdf_vpc.id
 
+  tags = {
+    Name = "stirling-pdf-nacl"
+  }
+}
 
+resource "aws_network_acl_rule" "inbound_8080" {
+  network_acl_id = aws_network_acl.stirling_pdf_nacl.id
+  rule_number    = 100
+  egress         = false
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 8080
+  to_port        = 8080
+}
 
+resource "aws_network_acl_rule" "inbound_ephemeral" {
+  network_acl_id = aws_network_acl.stirling_pdf_nacl.id
+  rule_number    = 110
+  egress         = false
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 1024
+  to_port        = 65535
+}
+
+resource "aws_network_acl_rule" "outbound_all" {
+  network_acl_id = aws_network_acl.stirling_pdf_nacl.id
+  rule_number    = 100
+  egress         = true
+  protocol       = "-1"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+}
 # ============================================
 # Route Table
 # ============================================
@@ -66,7 +104,10 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.stirling_pdf_rt.id
 }
 
-
+resource "aws_network_acl_association" "stirling_pdf_nacl_assoc" {
+  subnet_id      = aws_subnet.stirling_pdf_subnet.id
+  network_acl_id = aws_network_acl.stirling_pdf_nacl.id
+}
 # ============================================
 # Part 6: Security Groups
 # ============================================

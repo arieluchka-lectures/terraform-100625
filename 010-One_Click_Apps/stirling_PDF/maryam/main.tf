@@ -76,14 +76,6 @@ resource "aws_security_group" "app_server" {
   name        = "app-server-sg"
   description = "Security group for application server"
   vpc_id      = aws_vpc.stirling_pdf_vpc.id
-  
-  ingress {
-  description = "SSH access (limit to your IP in production)"
-  from_port   = 22
-  to_port     = 22
-  protocol    = "tcp"
-  cidr_blocks = ["0.0.0.0/0"]
-}
 
 ingress {
   description = "Stirling-PDF web UI (TCP 8080)"
@@ -112,27 +104,6 @@ ingress {
 
 
 
-resource "tls_private_key" "ssh_key" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
-
-resource "local_file" "private_key" {
-  content         = tls_private_key.ssh_key.private_key_pem
-  filename        = "${path.module}/private_key_to_exercise.pem"
-  file_permission = "0400"
-}
-
-resource "aws_key_pair" "app_key_pair" {
-  key_name = "ssh_key_for_stirling_pdf"
-  public_key = tls_private_key.ssh_key.public_key_openssh
-}
-
-
-
-
-
 resource "aws_instance" "stirling_pdf_app" {
   ami           = "ami-0532be01f26a3de55"
   instance_type = "t3.small"
@@ -140,7 +111,6 @@ resource "aws_instance" "stirling_pdf_app" {
   
   vpc_security_group_ids = [aws_security_group.app_server.id]  
 
-  key_name               = aws_key_pair.app_key_pair.key_name
   user_data = file("${path.module}/scripts/user-data-stirling-pdf.sh")
   tags = {
     Name = "stirling-pdf-app"

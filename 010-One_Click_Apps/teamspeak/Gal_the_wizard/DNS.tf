@@ -37,3 +37,7 @@ resource "aws_route53_record" "app_server_record" {
   ttl     = 300
   records = [aws_instance.app_server.private_ip]
 }
+
+
+  
+}

@@ -22,20 +22,8 @@ terraform apply
 2) View Terraform outputs (public IP / URL):
 terraform output
 
-3) Connect to the EC2 instance (SSH) using the public IP from the outputs:
 
-Start-Service ssh-agent
-ssh-add ./private_key_to_exercise.pem
-
-Connect to the EC2 instance:
-  ssh ec2-user@44.203.29.16
-
-or--> ssh -i <private_key_file> ec2-user@<EC2_PUBLIC_IP>
-
-4) Open the Stirling-PDF Web UI in your browser:
+3) Open the Stirling-PDF Web UI in your browser:
 http://<EC2_PUBLIC_IP>:8080
 
-5) (Optional) Verify the service is running on the instance:
-docker ps
-curl -I http://localhost:8080
 

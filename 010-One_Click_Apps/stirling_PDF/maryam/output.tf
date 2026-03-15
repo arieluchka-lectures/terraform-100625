@@ -11,8 +11,7 @@ output "stirling_public_ip" {
 
 output "combined_message" {
   value = <<-EOT
-Start-Service ssh-agent
-ssh-add ${local_file.private_key.filename}
+
 
 Connect to the EC2 instance:
   ssh ec2-user@${aws_instance.stirling_pdf_app.public_ip}

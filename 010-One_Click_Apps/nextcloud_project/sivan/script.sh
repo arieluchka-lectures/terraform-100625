@@ -11,15 +11,25 @@ dnf install -y docker
 systemctl enable docker
 systemctl start docker
 
-systemctl enable amazon-ssm-agent
-systemctl restart amazon-ssm-agent
+sleep 10
 
-usermod -aG docker ec2-user
+mkdir -p /usr/local/lib/docker/cli-plugins
+curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 \
+  -o /usr/local/lib/docker/cli-plugins/docker-compose
+chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+docker --version
+docker compose version
+
+systemctl enable amazon-ssm-agent || true
+systemctl restart amazon-ssm-agent || true
+
+usermod -aG docker ec2-user || true
 
 mkdir -p /opt/nextcloud
 cd /opt/nextcloud
 
-cat > compose.yaml <<'EOF'
+cat > /opt/nextcloud/compose.yaml <<'EOF'
 services:
   db:
     image: mariadb:11
@@ -57,6 +67,6 @@ volumes:
   nextcloud_data:
 EOF
 
-docker compose up -d
+docker compose -f /opt/nextcloud/compose.yaml up -d
 
 echo "===== NEXTCLOUD BOOTSTRAP END ====="

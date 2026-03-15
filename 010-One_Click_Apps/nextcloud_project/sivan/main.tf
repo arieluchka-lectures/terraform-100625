@@ -52,7 +52,7 @@ resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = var.public_subnet_cidr_block
   availability_zone       = var.availability_zone
-  map_public_ip_on_launch = false
+  map_public_ip_on_launch = true
 
   tags = {
     Name = "${var.tag_name_prefix}-public-subnet"
@@ -109,6 +109,24 @@ resource "aws_network_acl" "nextcloud_nacl" {
     to_port    = 65535
   }
 
+  ingress {
+    rule_no    = 130
+    protocol   = "udp"
+    action     = "allow"
+    cidr_block = var.vpc_cidr_block
+    from_port  = 53
+    to_port    = 53
+  }
+
+  ingress {
+    rule_no    = 140
+    protocol   = "tcp"
+    action     = "allow"
+    cidr_block = var.vpc_cidr_block
+    from_port  = 53
+    to_port    = 53
+  }
+
   egress {
     rule_no    = 100
     protocol   = "tcp"
@@ -134,6 +152,24 @@ resource "aws_network_acl" "nextcloud_nacl" {
     cidr_block = "0.0.0.0/0"
     from_port  = 1024
     to_port    = 65535
+  }
+
+  egress {
+    rule_no    = 130
+    protocol   = "udp"
+    action     = "allow"
+    cidr_block = var.vpc_cidr_block
+    from_port  = 53
+    to_port    = 53
+  }
+
+  egress {
+    rule_no    = 140
+    protocol   = "tcp"
+    action     = "allow"
+    cidr_block = var.vpc_cidr_block
+    from_port  = 53
+    to_port    = 53
   }
 
   tags = {
@@ -208,7 +244,7 @@ resource "aws_instance" "nextcloud" {
   subnet_id                   = aws_subnet.public.id
   vpc_security_group_ids      = [aws_security_group.nextcloud_sg.id]
   iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
-  associate_public_ip_address = false
+  associate_public_ip_address = true
   user_data                   = file("${path.module}/script.sh")
   user_data_replace_on_change = true
 
@@ -221,6 +257,10 @@ resource "aws_instance" "nextcloud" {
   tags = {
     Name = "${var.tag_name_prefix}-ec2"
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.ssm_core
+  ]
 }
 
 resource "aws_eip" "nextcloud_eip" {
@@ -234,4 +274,12 @@ resource "aws_eip" "nextcloud_eip" {
 resource "aws_eip_association" "nextcloud_assoc" {
   instance_id   = aws_instance.nextcloud.id
   allocation_id = aws_eip.nextcloud_eip.id
+}
+
+output "nextcloud_public_ip" {
+  value = aws_eip.nextcloud_eip.public_ip
+}
+
+output "nextcloud_url" {
+  value = "http://${aws_eip.nextcloud_eip.public_ip}"
 }

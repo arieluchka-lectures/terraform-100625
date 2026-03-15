@@ -40,4 +40,3 @@ resource "aws_route53_record" "app_server_record" {
 
 
   
-}
